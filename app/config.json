@@ -1,0 +1,6 @@
+{
+    "label": "Storii",
+    "icon": "/mnt/SDCARD/Icons/Default/app/music.png",
+    "launch": "launch.sh",
+    "description": "A Storii Teller"
+}
