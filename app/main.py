@@ -79,14 +79,19 @@ class StoryPlayer:
         load_chapters_for_story(story)
         chapter = story["chapters"][self.current_chapter_index]
         self.current_audio_file = chapter["audio"]
-        sampling_rate = get_audio_sampling_rate(self.current_audio_file)
-        pygame.mixer.quit()
-        pygame.mixer.init(frequency=sampling_rate)
-        pygame.mixer.music.load(self.current_audio_file)
-        pygame.mixer.music.set_volume(1.0)
-        pygame.mixer.music.play()
-        self.audio_playing = True
-        self.audio_total_length = get_audio_length(self.current_audio_file)
+        try:
+            sampling_rate = get_audio_sampling_rate(self.current_audio_file)
+            pygame.mixer.quit()
+            pygame.mixer.init(frequency=sampling_rate)
+            pygame.mixer.music.load(self.current_audio_file)
+            pygame.mixer.music.set_volume(1.0)
+            pygame.mixer.music.play()
+            self.audio_playing = True
+            self.audio_total_length = get_audio_length(self.current_audio_file)
+        except Exception:
+            self.audio_playing = False
+            self.current_audio_file = None
+            self.current_menu = "error"
 
     def handle_player_controls(self):
         if self.audio_playing:
