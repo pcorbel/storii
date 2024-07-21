@@ -115,7 +115,7 @@ def process_story(folder_path):
 def get_stories():
     if not os.path.exists(STORIIES_PATH):
         return []
-    stories = [process_story(os.path.join(STORIIES_PATH, folder_name)) for folder_name in os.listdir(STORIIES_PATH) if os.path.isdir(os.path.join(STORIIES_PATH, folder_name))]
+    stories = [process_story(os.path.join(STORIIES_PATH, folder_name)) for folder_name in os.listdir(STORIIES_PATH) if os.path.isdir(os.path.join(STORIIES_PATH, folder_name)) and not folder_name.startswith(".")]
     return sorted(stories, key=lambda x: x["title"].lower())
 
 
@@ -159,7 +159,7 @@ def load_chapters_for_story(story):
     folder_path = story["folder_path"]
     chapters = []
     for file_name in os.listdir(folder_path):
-        if file_name.endswith(".mp3"):
+        if file_name.endswith(".mp3") and not file_name.startswith("."):
             audio_file = os.path.join(folder_path, file_name)
             chapter_title, track_number, album, disc_number = get_chapter_info_from_id3(audio_file)
             if not chapter_title:
