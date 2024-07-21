@@ -30,6 +30,7 @@ class StoryPlayer:
         self.current_audio_position = 0
         self.audio_playing = False
         self.audio_total_length = 0
+        self.last_known_pos = 0
         self.key_press_delay = 200
         self.key_left_pressed = False
         self.key_right_pressed = False
@@ -71,6 +72,7 @@ class StoryPlayer:
         self.audio_total_length = 0
         self.current_audio_file = None
         self.current_chapter_index = 0
+        self.last_known_pos = 0
         if pygame.mixer.music.get_busy():
             pygame.mixer.music.stop()
 
@@ -79,6 +81,7 @@ class StoryPlayer:
         load_chapters_for_story(story)
         chapter = story["chapters"][self.current_chapter_index]
         self.current_audio_file = chapter["audio"]
+        self.last_known_pos = 0
         try:
             sampling_rate = get_audio_sampling_rate(self.current_audio_file)
             pygame.mixer.quit()
@@ -94,16 +97,23 @@ class StoryPlayer:
             self.current_menu = "error"
 
     def handle_player_controls(self):
-        if self.audio_playing:
-            pygame.mixer.music.pause()
+        if not self.audio_playing and self.current_audio_position >= self.audio_total_length:
+            self.current_audio_position = 0
+            self.last_known_pos = 0
+            self.start_audio()
         else:
-            pygame.mixer.music.unpause()
-        self.audio_playing = not self.audio_playing
+            if self.audio_playing:
+                pygame.mixer.music.pause()
+            else:
+                pygame.mixer.music.unpause()
+            self.audio_playing = not self.audio_playing
         self.draw_menu()
 
     def update_audio_position(self):
         if self.audio_playing:
-            self.current_audio_position += 1 / 10.0
+            elapsed_time = pygame.mixer.music.get_pos() / 1000.0
+            self.current_audio_position += elapsed_time - self.last_known_pos
+            self.last_known_pos = elapsed_time
             if self.current_audio_position > self.audio_total_length:
                 self.current_audio_position = self.audio_total_length
 
@@ -112,6 +122,7 @@ class StoryPlayer:
         pygame.mixer.music.play(start=self.current_audio_position)
         if not self.audio_playing:
             pygame.mixer.music.pause()
+        self.last_known_pos = pygame.mixer.music.get_pos() / 1000.0
 
     def fast_forward(self):
         self.seek_audio(self.current_audio_position + 10)
@@ -122,7 +133,8 @@ class StoryPlayer:
     def check_audio_end(self):
         if not pygame.mixer.music.get_busy() and self.audio_playing:
             self.audio_playing = False
-            self.current_audio_position = 0
+            self.current_audio_position = self.audio_total_length
+            self.last_known_pos = 0
             self.draw_menu()
 
     def draw_menu(self):
